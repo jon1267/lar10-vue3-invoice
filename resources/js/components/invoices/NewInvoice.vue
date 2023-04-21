@@ -1,3 +1,21 @@
+<script setup>
+    import { onMounted, ref } from 'vue'
+
+    let allCustomers = ref([])
+    let customer_id  = ref([])
+
+    onMounted(async () => {
+       await getCustomers()
+    })
+
+    const getCustomers = async () => {
+        let response = await axios.get('/api/customers')
+        console.log(response.data);
+        allCustomers.value = response.data.customers
+    }
+
+</script>
+
 <template>
     <div class="container">
 
@@ -17,7 +35,8 @@
                     <div>
                         <p class="my-1">Customer</p>
                         <select name="" id="" class="input">
-                            <option value="">cust 1</option>
+                            <option value="{{ null }}" selected disabled>select customer</option>
+                            <option value="{{ customer.id }}" v-for="customer in allCustomers" :key="customer.id" >{{ customer.firstname || '' }} {{ customer.lastname || '' }}</option>
                         </select>
                     </div>
                     <div>
@@ -125,12 +144,3 @@
     </div>
 </template>
 
-<script>
-export default {
-    name: "NewInvoice"
-}
-</script>
-
-<style scoped>
-
-</style>
