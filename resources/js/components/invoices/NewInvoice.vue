@@ -1,19 +1,64 @@
 <script setup>
     import { onMounted, ref } from 'vue'
+    import axios from 'axios';
 
-    let allCustomers = ref([])
-    let customer_id  = ref([])
+    let form = ref([]);
+    let allCustomers = ref([]);
+    let customer_id  = ref([]);
+    let item = ref([]);
+    let listCart = ref([]);
+    const showModal = ref(false);
+    const hideModal = ref(true);
+    let listProducts = ref([]);
+
+
+    const indexForm = async () => {
+        let response = await axios.get('/api/create-invoice');
+        //console.log('form', response.data);
+        form.value = response.data;
+    };
+
+    const getAllCustomers = async () => {
+        let response = await axios.get('/api/customers')
+        //console.log(response.data);
+        allCustomers.value = response.data.customers;
+    };
+
+    const addToCart = (item) => {
+        const itemcart = {
+            id: item.id,
+            item_code: item.item_code,
+            description: item.description,
+            unit_price: item.unit_price,
+            quantity: item.quantity,
+        }
+        listCart.value.push(itemcart);
+        closeModal();
+    };
+
+    const removeItem = (i) => {
+        listCart.value.splice(i,1);
+    };
+
+    const openModal = () => {
+        showModal.value = !showModal.value;
+    };
+
+    const closeModal = () => {
+        showModal.value = !hideModal.value;
+    };
+
+    const getProducts = async () => {
+        let response = await axios.get('/api/products');
+        //console.log(response.data);
+        listProducts.value = response.data.products;
+    };
 
     onMounted(async () => {
-       await getCustomers()
-    })
-
-    const getCustomers = async () => {
-        let response = await axios.get('/api/customers')
-        console.log(response.data);
-        allCustomers.value = response.data.customers
-    }
-
+        await indexForm();
+        await getAllCustomers();
+        await getProducts();
+    });
 </script>
 
 <template>
@@ -34,22 +79,24 @@
                 <div class="card__content--header">
                     <div>
                         <p class="my-1">Customer</p>
-                        <select name="" id="" class="input">
-                            <option value="{{ null }}" selected disabled>select customer</option>
-                            <option value="{{ customer.id }}" v-for="customer in allCustomers" :key="customer.id" >{{ customer.firstname || '' }} {{ customer.lastname || '' }}</option>
+                        <select name="" id="" class="input" v-model="customer_id">
+                            <option disabled>Select customer</option>
+                            <option :value="customer.id" v-for="customer in allCustomers" :key="customer.id" >
+                                {{ customer.firstname || '' }} {{ customer.lastname || '' }}
+                            </option>
                         </select>
                     </div>
                     <div>
                         <p class="my-1">Date</p>
-                        <input id="date" placeholder="dd-mm-yyyy" type="date" class="input"> <!---->
+                        <input id="date" placeholder="dd-mm-yyyy" type="date" class="input" v-model="form.date"> <!---->
                         <p class="my-1">Due Date</p>
-                        <input id="due_date" type="date" class="input">
+                        <input id="due_date" type="date" class="input" v-model="form.due_date">
                     </div>
                     <div>
                         <p class="my-1">Numero</p>
-                        <input type="text" class="input">
+                        <input type="text" class="input" v-model="form.number">
                         <p class="my-1">Reference(Optional)</p>
-                        <input type="text" class="input">
+                        <input type="text" class="input" v-model="form.reference">
                     </div>
                 </div>
                 <br><br>
@@ -64,30 +111,33 @@
                     </div>
 
                     <!-- item 1 -->
-                    <div class="table--items2">
-                        <p>#093654 vjxhchkvhxc vkxckvjkxc jkvjxckvjkx </p>
+                    <div class="table--items2" v-for="(itemcart, i) in listCart" :key="itemcart.id">
+                        <p>#{{ itemcart.item_code }} {{ itemcart.description }} </p>
                         <p>
-                            <input type="text" class="input" >
+                            <input type="text" class="input" v-model="itemcart.unit_price">
                         </p>
                         <p>
-                            <input type="text" class="input" >
+                            <input type="text" class="input" v-model="itemcart.quantity">
                         </p>
-                        <p>
-                            $ 10000
+                        <p v-if="itemcart.quantity">
+                            $ {{ (itemcart.quantity)*(itemcart.unit_price) }}
                         </p>
-                        <p style="color: red; font-size: 24px;cursor: pointer;">
+                        <p v-else></p>
+                        <p @click="removeItem(i)" style="color: red; font-size: 24px;cursor: pointer;">
                             &times;
                         </p>
                     </div>
                     <div style="padding: 10px 30px !important;">
-                        <button class="btn btn-sm btn__open--modal">Add New Line</button>
+                        <button class="btn btn-sm btn__open--modal" @click="openModal()">
+                            Add New Line
+                        </button>
                     </div>
                 </div>
 
                 <div class="table__footer">
                     <div class="document-footer" >
                         <p>Terms and Conditions</p>
-                        <textarea cols="50" rows="7" class="textarea" ></textarea>
+                        <textarea cols="50" rows="7" class="textarea" v-model="form.terms_and_conditions"></textarea>
                     </div>
                     <div>
                         <div class="table__footer--subtotal">
@@ -120,20 +170,23 @@
 
         </div>
         <!--==================== add modal items ====================-->
-        <div class="modal main__modal ">
+        <div class="modal main__modal " :class="{show: showModal}">
             <div class="modal__content">
-                <span class="modal__close btn__close--modal">×</span>
+                <span class="modal__close btn__close--modal" @click="closeModal()">×</span>
                 <h3 class="modal__title">Add Item</h3>
                 <hr><br>
                 <div class="modal__items">
-                    <select class="input my-1">
-                        <option value="None">None</option>
-                        <option value="None">LBC Padala</option>
-                    </select>
+                    <ul class="list-style-none">
+                        <li v-for="(item, i) in listProducts" :key="item.id" class="li-grid">
+                            <p>{{i+1}}</p>
+                            <a href="">{{item.item_code}} {{item.description}}</a>
+                            <button @click="addToCart(item)" class="add-button">+</button>
+                        </li>
+                    </ul>
                 </div>
                 <br><hr>
                 <div class="model__footer">
-                    <button class="btn btn-light mr-2 btn__close--modal">
+                    <button class="btn btn-light mr-2 btn__close--modal" @click="closeModal()">
                         Cancel
                     </button>
                     <button class="btn btn-light btn__close--modal ">Save</button>
@@ -143,4 +196,22 @@
 
     </div>
 </template>
+
+<style scoped>
+.list-style-none {
+    list-style: none;
+}
+.li-grid {
+    display: grid;
+    grid-template-columns: 30px 350px 15px;
+    align-items: center;
+    padding-bottom: 5px;
+}
+.add-button {
+    border: 1px solid #e0e0e0;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+}
+</style>
 
