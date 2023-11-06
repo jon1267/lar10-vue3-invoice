@@ -90,4 +90,11 @@ class InvoiceController extends Controller
 
         return response()->json(['message' => 'success'], 200);
     }
+
+    public function showInvoice($id)
+    {
+        $invoice = Invoice::with('customer', 'invoice_items.product')->where('id', $id)->first();
+
+        return response()->json(['invoice' => $invoice],200);
+    }
 }
