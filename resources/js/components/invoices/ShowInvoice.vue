@@ -16,13 +16,17 @@
 
     const getInvoice = async () => {
         let response = await axios.get(`/api/show-invoice/${props.id}`);
-        console.log(response.data.invoice);
+        //console.log(response.data.invoice);
         form.value = response.data.invoice;
     };
 
     const print = () => {
         window.print();
         router.push('/').catch(() => {});
+    };
+
+    const onEdit = (id) => {
+        router.push(`/invoice/edit/${id}`);
     };
 
     // return ro invoices list
@@ -64,7 +68,7 @@
                         </li>
                         <li>
                             <!-- Select Btn Option -->
-                            <button class="selectBtnFlat">
+                            <button class="selectBtnFlat" @click="onEdit(form.id)">
                                 <i class=" fas fa-reply"></i>
                                 Edit
                             </button>
@@ -93,7 +97,7 @@
 
             <div class="table invoice">
                 <div class="logo">
-                    <img src="assets/img/logo.png" alt="" style="width: 200px;">
+                    <img alt="" style="width: 200px;">
                 </div>
                 <div class="invoice__header--title">
                     <p></p>
