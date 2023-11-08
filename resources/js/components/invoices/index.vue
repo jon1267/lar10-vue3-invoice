@@ -26,7 +26,7 @@
 
     const newInvoice = async () => {
         let form = await axios.get('/api/create-invoice')
-        console.log('form', form.data)
+        //console.log('form', form.data)
         await router.push('/invoice/new')
 
     }

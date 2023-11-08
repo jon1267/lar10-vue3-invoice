@@ -84,6 +84,32 @@
 
     const onEdit = (id) => {
 
+        if (form.value.invoice_items.length > 0) {
+            //console.log(id, form.value.id ,JSON.stringify(form.value.invoice_items));
+            let subtotal = 0;
+            subtotal = subTotal();
+
+            let total = 0;
+            total = grandTotal()
+
+            const formData = new FormData();
+            formData.append('invoice_items', JSON.stringify(form.value.invoice_items));
+            formData.append('customer_id', form.value.customer_id);
+            formData.append('date', form.value.date);
+            formData.append('due_date', form.value.due_date);
+            formData.append('number', form.value.number);
+            formData.append('reference', form.value.reference);
+            formData.append('discount', form.value.discount);
+            formData.append('subtotal', subtotal);
+            formData.append('total', total);
+            formData.append('terms_and_conditions', form.value.terms_and_conditions);
+            //console.log(formData);
+
+            //form.value.id === id; => `/api/update-invoice/${form.value.id}`
+            axios.post(`/api/update-invoice/${id}`, formData);
+            form.value.invoice_items = [];
+            router.push('/');
+        }
     };
 
     onMounted(async () => {
@@ -194,7 +220,7 @@
 
                 </div>
                 <div>
-                    <a class="btn btn-secondary">
+                    <a class="btn btn-secondary" @click="onEdit(form.id)">
                         Save
                     </a>
                 </div>

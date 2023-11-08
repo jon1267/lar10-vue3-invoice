@@ -113,4 +113,46 @@ class InvoiceController extends Controller
 
         return response()->noContent();
     }
+
+    public function updateInvoice(Request $request, $id)
+    {
+        //dd($request, $id);
+        $invoice = Invoice::where('id', $id)->first();
+
+        $invoiceData['sub_total'] = $request->subtotal;
+        $invoiceData['total'] = $request->total;
+        $invoiceData['discount'] = $request->discount;
+        $invoiceData['customer_id'] = $request->customer_id;
+        $invoiceData['number'] = $request->number;
+        $invoiceData['date'] = $request->date;
+        $invoiceData['due_date'] = $request->due_date;
+        $invoiceData['reference'] = $request->reference;
+        $invoiceData['terms_and_conditions'] = $request->terms_and_conditions;
+
+        $invoice->update($invoiceData);
+
+        $invoice->invoice_items()->delete();
+
+        $invoiceItems = json_decode($request->invoice_items);
+
+        foreach ($invoiceItems as $item) {
+            $itemData['invoice_id'] = $invoice->id;
+            $itemData['product_id'] = $item->product_id;
+            $itemData['quantity'] = $item->quantity;
+            $itemData['unit_price'] = $item->unit_price;
+
+            InvoiceItem::create($itemData);
+        }
+
+        return response()->json(['message' => 'success'],200);
+    }
+
+    public function deleteInvoice($id)
+    {
+        $invoice = Invoice::FindOrFail($id);
+        $invoice->invoice_items()->delete();
+        $invoice->delete();
+
+        return response()->noContent();
+    }
 }

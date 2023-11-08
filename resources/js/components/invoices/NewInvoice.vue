@@ -89,7 +89,7 @@
             formData.append('total', total);
             formData.append('terms_and_conditions', form.value.terms_and_conditions);
 
-            console.log(formData);
+            //console.log(formData);
             axios.post('/api/save-invoice', formData);
             listCart.value = [];
             router.push('/');
